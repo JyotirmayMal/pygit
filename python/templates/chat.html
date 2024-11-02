@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .chat-container { max-width: 600px; margin: 0 auto; padding: 20px; overflow-y: scroll; height: 90vh; display: flex; flex-direction: column-reverse; }
+        .chat-bubble { padding: 10px 15px; margin: 10px; border-radius: 10px; max-width: 80%; }
+        .user-message { background-color: #d1e7dd; align-self: flex-end; text-align: right; }
+        .ai-message { background-color: #f8d7da; align-self: flex-start; text-align: left; }
+        .input-container { display: flex; justify-content: center; padding: 10px; }
+        input[type="text"] { width: 80%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        button { padding: 10px; margin-left: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 5px; cursor: pointer; }
+        button:disabled { background-color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chat-container"></div>
+
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." autofocus>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        
+        // Send message to Flask server
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Append user message
+            appendMessage(message, 'user-message');
+            userInput.value = '';
+            userInput.disabled = true;
+
+            // Send message to Flask server
+            const response = await fetch('/send_message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            userInput.disabled = false;
+            
+            // Append AI reply
+            appendMessage(data.ai_reply, 'ai-message');
+        }
+
+        // Function to append a new message
+        function appendMessage(text, className) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('chat-bubble', className);
+            messageBubble.innerText = text;
+            chatContainer.prepend(messageBubble); // Add message at the top for endless scroll
+        }
+
+        // Infinite scroll effect
+        chatContainer.addEventListener('scroll', function() {
+            if (chatContainer.scrollTop === 0) {
+                // Load older messages (could add logic here to load more from server if needed)
+            }
+        });
+    </script>
+</body>
+</html>
